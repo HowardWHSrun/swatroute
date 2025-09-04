@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { Container, Typography, Box, Divider } from "@mui/material";
+import { Container, Typography, Box, Divider, Button } from "@mui/material";
 import ClientMap from "@/components/ClientMap";
 import HexagonRadar from "@/components/HexagonRadar";
+import CommentsSection from "@/components/CommentsSection";
 
 export default async function RouteDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -17,6 +18,11 @@ export default async function RouteDetail({ params }: { params: Promise<{ id: st
         by {route.author}
       </Typography>
       <ClientMap polyline={poly} height={420} />
+      <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+        <Button href={`/api/routes/${route.id}/download`} variant="outlined" size="small">
+          Download GPX
+        </Button>
+      </Box>
       <Divider sx={{ my: 3 }} />
       <Box sx={{ display: "flex", justifyContent: "center" }}>
         <HexagonRadar
@@ -31,6 +37,7 @@ export default async function RouteDetail({ params }: { params: Promise<{ id: st
           size={300}
         />
       </Box>
+      <CommentsSection routeId={route.id} />
     </Container>
   );
 }

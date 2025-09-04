@@ -1,0 +1,49 @@
+
+> swat-xc-routes@0.1.0 dev
+> next dev --turbopack -p 3000
+
+   ▲ Next.js 15.5.2 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://130.58.167.75:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 716ms
+ ○ Compiling /api/routes ...
+ ✓ Compiled /api/routes in 91.4s
+ POST /api/routes 201 in 91923ms
+ ○ Compiling /routes ...
+ ✓ Compiled /routes in 7.7s
+ GET /routes 200 in 7855ms
+ ✓ Compiled /favicon.ico in 97ms
+ GET /api/routes 200 in 252ms
+ GET /favicon.ico?favicon.0b3bf435.ico 200 in 325ms
+ GET /favicon.ico?favicon.0b3bf435.ico 200 in 227ms
+ ✓ Compiled / in 395ms
+(node:96203) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ GET / 200 in 10962ms
+ GET /api/routes 200 in 246ms
+ ✓ Compiled /routes/[id] in 305ms
+ GET /routes/cmf5bs7ce0000cd8b42vkbhvy 200 in 5634ms
+ POST /api/routes 201 in 272ms
+ ⨯ [TypeError: Cannot read properties of undefined (reading 'cachedShadowRoot')] {
+  digest: '1594003644'
+}
+ GET /routes 500 in 433ms
+ GET /api/routes 200 in 537ms
+ GET /favicon.ico?favicon.0b3bf435.ico 200 in 233ms
+ ⨯ [TypeError: Cannot read properties of undefined (reading 'cachedShadowRoot')] {
+  digest: '1594003644'
+}
+ GET /routes/cmf5efqis0001cd8byw7egqfc 500 in 390ms
+ ⨯ [TypeError: Cannot read properties of undefined (reading 'cachedShadowRoot')] {
+  digest: '1594003644'
+}
+ GET /routes 500 in 238ms
+ GET /api/routes 200 in 258ms
+ GET /routes 200 in 74ms
+ GET /routes 200 in 29ms
+ GET /routes 200 in 34ms
+ GET /routes 200 in 36ms
+ ✓ Compiled in 145ms

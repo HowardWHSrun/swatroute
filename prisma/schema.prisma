@@ -25,6 +25,25 @@ model Route {
   surface    Int
   safety     Int
   access     Int
+
+  comments   Comment[]
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  author     String
+  body       String
+  // Optional per-comment ratings, allow partial feedback
+  traffic    Int? // 0-10
+  elevation  Int?
+  scenic     Int?
+  surface    Int?
+  safety     Int?
+  access     Int?
+
+  routeId    String
+  route      Route   @relation(fields: [routeId], references: [id], onDelete: Cascade)
 }
 
 

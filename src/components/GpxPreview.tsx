@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ClientMap from "@/components/ClientMap";
 import GPX from "gpxparser";
 
@@ -8,6 +8,27 @@ export type ParsedGpx = {
   polyline: [number, number][];
   center: [number, number];
 };
+
+function computeStats(line: [number, number][]) {
+  // Haversine distance in meters
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  let total = 0;
+  for (let i = 1; i < line.length; i++) {
+    const [lat1, lon1] = line[i - 1];
+    const [lat2, lon2] = line[i];
+    const R = 6371000;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    total += R * c;
+  }
+  const miles = total / 1609.344;
+  return { meters: total, miles };
+}
 
 export default function GpxPreview({ file }: { file?: File }) {
   const [parsed, setParsed] = useState<ParsedGpx | null>(null);
@@ -35,8 +56,18 @@ export default function GpxPreview({ file }: { file?: File }) {
     };
   }, [file]);
 
+  const stats = useMemo(() => (parsed ? computeStats(parsed.polyline) : null), [parsed]);
   if (!parsed) return null;
-  return <ClientMap polyline={parsed.polyline} center={parsed.center} height={360} />;
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      <ClientMap polyline={parsed.polyline} center={parsed.center} height={360} />
+      {stats ? (
+        <div style={{ fontSize: 13 }}>
+          Distance: {stats.miles.toFixed(2)} mi ({Math.round(stats.meters)} m)
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 

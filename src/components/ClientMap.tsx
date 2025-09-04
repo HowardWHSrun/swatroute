@@ -29,7 +29,32 @@ export default function ClientMap({
     return [39.905, -75.353];
   }, [center, polyline]);
 
-  return <LeafletMapInner polyline={polyline} height={height} center={computedCenter as [number, number]} zoom={zoom} />;
+  const bounds = useMemo<[[number, number], [number, number]] | undefined>(() => {
+    if (!polyline || polyline.length === 0) return undefined;
+    let minLat = Infinity, minLon = Infinity, maxLat = -Infinity, maxLon = -Infinity;
+    for (const p of polyline) {
+      const [lat, lon] = p as [number, number];
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+      if (lat < minLat) minLat = lat;
+      if (lon < minLon) minLon = lon;
+      if (lat > maxLat) maxLat = lat;
+      if (lon > maxLon) maxLon = lon;
+    }
+    if (!Number.isFinite(minLat) || !Number.isFinite(minLon) || !Number.isFinite(maxLat) || !Number.isFinite(maxLon)) {
+      return undefined;
+    }
+    return [[minLat, minLon], [maxLat, maxLon]];
+  }, [polyline]);
+
+  return (
+    <LeafletMapInner
+      polyline={polyline}
+      height={height}
+      center={computedCenter as [number, number]}
+      zoom={zoom}
+      bounds={bounds}
+    />
+  );
 }
 
 
