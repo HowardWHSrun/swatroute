@@ -1,8 +1,9 @@
 "use client";
 
 import useSWR from "swr";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, Button, TextField, Typography } from "@mui/material";
+import { getStoredComments, saveComment, StoredComment } from "@/lib/localStorage";
 
 type Comment = {
   id: string;
@@ -14,23 +15,41 @@ type Comment = {
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export default function CommentsSection({ routeId }: { routeId: string }) {
-  const { data, mutate } = useSWR<Comment[]>(`/api/routes/${routeId}/comments`, fetcher);
+  const { data: apiData, mutate } = useSWR<Comment[]>(`/api/routes/${routeId}/comments`, fetcher);
+  const [localComments, setLocalComments] = useState<StoredComment[]>([]);
   const [author, setAuthor] = useState("");
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    setLocalComments(getStoredComments(routeId));
+  }, [routeId]);
+
+  const data = apiData || localComments;
 
   const submit = async () => {
     if (!author || !body) return;
     setSubmitting(true);
     try {
-      await fetch(`/api/routes/${routeId}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ author, body }),
-      });
-      setAuthor("");
-      setBody("");
-      mutate();
+      let success = false;
+      try {
+        const res = await fetch(`/api/routes/${routeId}/comments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ author, body }),
+        });
+        success = res.ok;
+        if (success) mutate();
+      } catch {
+        // Fallback to localStorage for GitHub Pages
+        saveComment({ author, body, routeId });
+        setLocalComments(getStoredComments(routeId));
+        success = true;
+      }
+      if (success) {
+        setAuthor("");
+        setBody("");
+      }
     } finally {
       setSubmitting(false);
     }

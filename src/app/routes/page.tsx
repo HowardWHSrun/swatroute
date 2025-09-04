@@ -2,8 +2,10 @@
 
 import useSWR from "swr";
 import { Container, Typography, Card, CardContent, Box, Button } from "@mui/material";
+import { useEffect, useState } from "react";
 import ClientMap from "@/components/ClientMap";
 import HexagonRadar from "@/components/HexagonRadar";
+import { getStoredRoutes, StoredRoute } from "@/lib/localStorage";
 
 type RouteRow = {
   id: string;
@@ -21,7 +23,14 @@ type RouteRow = {
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export default function RoutesPage() {
-  const { data, error } = useSWR<RouteRow[]>("/api/routes", fetcher);
+  const { data: apiData, error } = useSWR<RouteRow[]>("/api/routes", fetcher);
+  const [localData, setLocalData] = useState<StoredRoute[]>([]);
+
+  useEffect(() => {
+    setLocalData(getStoredRoutes());
+  }, []);
+
+  const data = apiData || localData;
 
   return (
     <Container sx={{ py: 4 }}>

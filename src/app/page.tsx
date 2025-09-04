@@ -6,6 +6,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import GpxPreview from "@/components/GpxPreview";
 import HexagonRadar, { RatingKey } from "@/components/HexagonRadar";
 import { parseGpxText } from "@/lib/gpxUtils";
+import { saveRoute } from "@/lib/localStorage";
 
 const ratingKeys: RatingKey[] = [
   "traffic",
@@ -149,12 +150,32 @@ export default function Home() {
             const text = await file.text();
             const { polyline: poly } = parseGpxText(text);
             try {
-              const res = await fetch("/api/routes", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title, author, gpxText: text, polyline: poly, ratings }),
-              });
-              if (!res.ok) throw new Error("Failed to save");
+              // Try API first, fallback to localStorage for static deployment
+              let success = false;
+              try {
+                const res = await fetch("/api/routes", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ title, author, gpxText: text, polyline: poly, ratings }),
+                });
+                success = res.ok;
+              } catch {
+                // Fallback to localStorage for GitHub Pages
+                saveRoute({
+                  title,
+                  author,
+                  gpxText: text,
+                  polyline: JSON.stringify(poly),
+                  traffic: ratings.traffic,
+                  elevation: ratings.elevation,
+                  scenic: ratings.scenic,
+                  surface: ratings.surface,
+                  safety: ratings.safety,
+                  access: ratings.access,
+                });
+                success = true;
+              }
+              if (!success) throw new Error("Failed to save");
               setSnack({ open: true, message: "Route saved!", severity: "success" });
               setTitle("");
               setAuthor("");

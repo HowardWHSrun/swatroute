@@ -1,13 +1,24 @@
 import { prisma } from "@/lib/prisma";
 import { Container, Typography, Box, Divider, Button } from "@mui/material";
+import { notFound } from "next/navigation";
 import ClientMap from "@/components/ClientMap";
 import HexagonRadar from "@/components/HexagonRadar";
 import CommentsSection from "@/components/CommentsSection";
+import { getStoredRoutes } from "@/lib/localStorage";
 
 export default async function RouteDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const route = await prisma.route.findUnique({ where: { id } });
-  if (!route) return <div>Not found</div>;
+  let route = null;
+  try {
+    route = await prisma.route.findUnique({ where: { id } });
+  } catch {
+    // Fallback to localStorage for GitHub Pages
+    if (typeof window !== 'undefined') {
+      const stored = getStoredRoutes();
+      route = stored.find(r => r.id === id) || null;
+    }
+  }
+  if (!route) return notFound();
   const poly = JSON.parse(route.polyline) as [number, number][];
   return (
     <Container sx={{ py: 4 }}>
