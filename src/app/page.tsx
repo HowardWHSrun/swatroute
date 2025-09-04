@@ -1,103 +1,132 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { Button, Container, Typography, Slider, Box, TextField } from "@mui/material";
+import GpxPreview from "@/components/GpxPreview";
+import HexagonRadar, { RatingKey } from "@/components/HexagonRadar";
+
+const ratingKeys: RatingKey[] = [
+  "traffic",
+  "elevation",
+  "scenic",
+  "surface",
+  "safety",
+  "access",
+];
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [file, setFile] = useState<File | undefined>(undefined);
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [ratings, setRatings] = useState<Record<RatingKey, number>>({
+    traffic: 5,
+    elevation: 5,
+    scenic: 5,
+    surface: 5,
+    safety: 5,
+    access: 5,
+  });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  return (
+    <Container sx={{ py: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        Swarthmore XC Routes
+      </Typography>
+      <Typography variant="body1" gutterBottom>
+        Upload a GPX file and rate the route across six qualities.
+      </Typography>
+
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+          gap: 3,
+          alignItems: "stretch",
+        }}
+      >
+        <Box>
+          <TextField label="Title" value={title} onChange={(e) => setTitle(e.target.value)} fullWidth sx={{ mb: 2 }} />
+          <TextField label="Author" value={author} onChange={(e) => setAuthor(e.target.value)} fullWidth sx={{ mb: 2 }} />
+          <Button variant="contained" component="label">
+            Select GPX
+            <input
+              hidden
+              type="file"
+              accept=".gpx,application/gpx+xml"
+              onChange={(e) => setFile(e.target.files?.[0] ?? undefined)}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </Button>
+          <div style={{ marginTop: 16 }}>
+            <GpxPreview file={file} />
+          </div>
+        </Box>
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            Ratings
+          </Typography>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+              gap: 2,
+            }}
           >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+            {ratingKeys.map((key) => (
+              <Box key={key}>
+                <Typography variant="body2" gutterBottom sx={{ textTransform: "capitalize" }}>
+                  {key}
+                </Typography>
+                <Slider
+                  value={ratings[key]}
+                  step={1}
+                  min={0}
+                  max={10}
+                  valueLabelDisplay="auto"
+                  onChange={(_, v) =>
+                    setRatings((prev) => ({ ...prev, [key]: Array.isArray(v) ? v[0] : v }))
+                  }
+                />
+              </Box>
+            ))}
+          </Box>
+
+          <div style={{ marginTop: 16, display: "flex", justifyContent: "center" }}>
+            <HexagonRadar ratings={ratings} />
+          </div>
+        </Box>
+      </Box>
+      <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
+        <Button
+          variant="contained"
+          disabled={!file || !title || !author}
+          onClick={async () => {
+            if (!file) return;
+            const text = await file.text();
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(text, "application/xml");
+            const pts = Array.from(xml.querySelectorAll("trkpt"));
+            const poly = pts
+              .map((el) => [Number(el.getAttribute("lat")), Number(el.getAttribute("lon"))] as [number, number])
+              .filter(([lat, lon]) => Number.isFinite(lat) && Number.isFinite(lon));
+            await fetch("/api/routes", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                title,
+                author,
+                gpxText: text,
+                polyline: poly,
+                ratings,
+              }),
+            });
+          }}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          Save Route
+        </Button>
+        <Button href="/routes" variant="outlined">
+          View All Routes
+        </Button>
+      </Box>
+    </Container>
   );
 }

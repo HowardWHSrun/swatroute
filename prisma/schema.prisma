@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Route {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  title      String
+  author     String
+  // Store GPX XML text (small files acceptable) or future file storage reference
+  gpxText    String
+  // Simplified polyline for quick preview, JSON stringified [[lat,lon], ...]
+  polyline   String
+
+  // Ratings 0-10
+  traffic    Int
+  elevation  Int
+  scenic     Int
+  surface    Int
+  safety     Int
+  access     Int
+}
+
+
