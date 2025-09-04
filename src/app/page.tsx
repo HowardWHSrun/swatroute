@@ -5,6 +5,7 @@ import { Button, Container, Typography, Slider, Box, TextField, Snackbar, Alert 
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import GpxPreview from "@/components/GpxPreview";
 import HexagonRadar, { RatingKey } from "@/components/HexagonRadar";
+import { parseGpxText } from "@/lib/gpxUtils";
 
 const ratingKeys: RatingKey[] = [
   "traffic",
@@ -146,20 +147,7 @@ export default function Home() {
             if (!file) return;
             setSaving(true);
             const text = await file.text();
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(text, "application/xml");
-            let pts: Element[] = Array.from(xml.getElementsByTagName("trkpt"));
-            if (pts.length === 0) {
-              try {
-                pts = Array.from(xml.getElementsByTagNameNS("*", "trkpt"));
-              } catch {}
-            }
-            if (pts.length === 0) {
-              pts = Array.from(xml.querySelectorAll("[lat][lon]"));
-            }
-            const poly = pts
-              .map((el) => [Number(el.getAttribute("lat")), Number(el.getAttribute("lon"))] as [number, number])
-              .filter(([lat, lon]) => Number.isFinite(lat) && Number.isFinite(lon));
+            const { polyline: poly } = parseGpxText(text);
             try {
               const res = await fetch("/api/routes", {
                 method: "POST",

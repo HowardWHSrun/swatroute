@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, memo } from "react";
 import ClientMap from "@/components/ClientMap";
 import GPX from "gpxparser";
+import { thinGpxPoints } from "@/lib/gpxUtils";
 
 export type ParsedGpx = {
   polyline: [number, number][];
@@ -30,7 +31,7 @@ function computeStats(line: [number, number][]) {
   return { meters: total, miles };
 }
 
-export default function GpxPreview({ file }: { file?: File }) {
+function GpxPreview({ file }: { file?: File }) {
   const [parsed, setParsed] = useState<ParsedGpx | null>(null);
 
   useEffect(() => {
@@ -45,7 +46,9 @@ export default function GpxPreview({ file }: { file?: File }) {
       gpx.parse(text);
       const track = gpx.tracks?.[0];
       const segment = (track?.points as Array<{ lat: number; lon: number }> | undefined) ?? [];
-      const line: [number, number][] = segment.map((p) => [p.lat as number, p.lon as number]);
+      const allPoints: [number, number][] = segment.map((p) => [p.lat as number, p.lon as number]);
+      // Thin points for performance
+      const line = thinGpxPoints(allPoints);
       if (!canceled) {
         const center: [number, number] = line.length > 0 ? line[0] : [39.905, -75.353];
         setParsed({ polyline: line, center });
@@ -69,5 +72,7 @@ export default function GpxPreview({ file }: { file?: File }) {
     </div>
   );
 }
+
+export default memo(GpxPreview);
 
 

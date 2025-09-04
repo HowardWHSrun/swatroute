@@ -27,6 +27,10 @@ model Route {
   access     Int
 
   comments   Comment[]
+
+  @@index([title])
+  @@index([author])
+  @@index([createdAt])
 }
 
 model Comment {
@@ -44,6 +48,9 @@ model Comment {
 
   routeId    String
   route      Route   @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@index([routeId])
+  @@index([createdAt])
 }
 
 

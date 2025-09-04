@@ -1,6 +1,7 @@
 "use client";
 
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts";
+import { memo } from "react";
 
 export type RatingKey = "traffic" | "elevation" | "scenic" | "surface" | "safety" | "access";
 
@@ -18,7 +19,7 @@ const ratingLabels: { key: RatingKey; label: string }[] = [
   { key: "access", label: "Access" },
 ];
 
-export default function HexagonRadar({ ratings, size = 280 }: HexagonRadarProps) {
+function HexagonRadar({ ratings, size = 280 }: HexagonRadarProps) {
   const data = ratingLabels.map(({ key, label }) => ({
     label,
     value: Math.max(0, Math.min(10, ratings[key] ?? 0)),
@@ -37,5 +38,7 @@ export default function HexagonRadar({ ratings, size = 280 }: HexagonRadarProps)
     </div>
   );
 }
+
+export default memo(HexagonRadar);
 
 

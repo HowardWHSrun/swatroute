@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import type { LatLngExpression } from "leaflet";
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 const LeafletMapInner = dynamic(() => import("@/components/LeafletMapInner"), {
   ssr: false,
 });
@@ -14,7 +14,7 @@ export type ClientMapProps = {
   zoom?: number;
 };
 
-export default function ClientMap({
+function ClientMap({
   polyline,
   height = 320,
   center,
@@ -56,5 +56,7 @@ export default function ClientMap({
     />
   );
 }
+
+export default memo(ClientMap);
 
 
