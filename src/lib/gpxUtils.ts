@@ -39,3 +39,7 @@ export function parseGpxText(text: string): { polyline: [number, number][]; cent
   
   return { polyline, center };
 }
+
+
+
+

@@ -1,3 +1,4 @@
+// Moved from app/api to avoid blocking static export for GitHub Pages
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 

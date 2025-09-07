@@ -1,8 +1,6 @@
 "use client";
 
-import useSWR from "swr";
 import { useState, useEffect } from "react";
-import { Box, Button, TextField, Typography } from "@mui/material";
 import { getStoredComments, saveComment, StoredComment } from "@/lib/localStorage";
 
 type Comment = {
@@ -12,10 +10,7 @@ type Comment = {
   body: string;
 };
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
-
 export default function CommentsSection({ routeId }: { routeId: string }) {
-  const { data: apiData, mutate } = useSWR<Comment[]>(`/api/routes/${routeId}/comments`, fetcher);
   const [localComments, setLocalComments] = useState<StoredComment[]>([]);
   const [author, setAuthor] = useState("");
   const [body, setBody] = useState("");
@@ -25,60 +20,65 @@ export default function CommentsSection({ routeId }: { routeId: string }) {
     setLocalComments(getStoredComments(routeId));
   }, [routeId]);
 
-  const data = apiData || localComments;
+  const data = localComments;
 
   const submit = async () => {
     if (!author || !body) return;
     setSubmitting(true);
     try {
-      let success = false;
-      try {
-        const res = await fetch(`/api/routes/${routeId}/comments`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ author, body }),
-        });
-        success = res.ok;
-        if (success) mutate();
-      } catch {
-        // Fallback to localStorage for GitHub Pages
-        saveComment({ author, body, routeId });
-        setLocalComments(getStoredComments(routeId));
-        success = true;
-      }
-      if (success) {
-        setAuthor("");
-        setBody("");
-      }
+      saveComment({ author, body, routeId });
+      setLocalComments(getStoredComments(routeId));
+      setAuthor("");
+      setBody("");
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Box sx={{ mt: 3, display: "grid", gap: 2 }}>
-      <Typography variant="h6">Comments</Typography>
-      <Box sx={{ display: "grid", gap: 1 }}>
-        <TextField label="Your name" value={author} onChange={(e) => setAuthor(e.target.value)} size="small" />
-        <TextField label="Comment" value={body} onChange={(e) => setBody(e.target.value)} multiline minRows={3} />
-        <Button onClick={submit} disabled={!author || !body || submitting} variant="contained">
+    <div className="mt-8">
+      <h3 className="text-2xl font-semibold mb-4 text-gray-800">Comments</h3>
+      <div className="space-y-4">
+        <input
+          type="text"
+          placeholder="Your name"
+          value={author}
+          onChange={(e) => setAuthor(e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+        <textarea
+          placeholder="Add a comment..."
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          rows={3}
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
+        />
+        <button
+          onClick={submit}
+          disabled={!author || !body || submitting}
+          className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+            !author || !body || submitting
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700"
+          }`}
+        >
           {submitting ? "Posting..." : "Post Comment"}
-        </Button>
-      </Box>
-      <Box sx={{ display: "grid", gap: 1 }}>
+        </button>
+      </div>
+      <div className="space-y-4 mt-6">
         {data?.map((c) => (
-          <Box key={c.id} sx={{ p: 1.5, border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
-            <Typography variant="subtitle2">{c.author}</Typography>
-            <Typography variant="caption" color="text.secondary">
+          <div key={c.id} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <div className="font-semibold text-gray-800">{c.author}</div>
+            <div className="text-sm text-gray-500 mb-2">
               {new Date(c.createdAt).toLocaleString()}
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 0.5 }}>
+            </div>
+            <div className="text-gray-700">
               {c.body}
-            </Typography>
-          </Box>
+            </div>
+          </div>
         ))}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }
 
